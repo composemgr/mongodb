@@ -1,0 +1,27 @@
+services:
+  mongodb-admin:
+    image: samueltallet/mongodb-php-gui
+    container_name: mongodb-admin
+    ports:
+      - '172.17.0.1:59084:5000'
+    depends_on:
+      - mongodb
+    extra_hosts:
+      - 'localhost:172.17.0.1'
+      - "host.docker.internal:host-gateway"
+
+  mongodb:
+    image: mongo:latest
+    restart: always
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - /var/lib/srv/$USER/docker/library/mongo/latest/rootfs/data/db/mongodb:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${DB_ADMIN_NAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${DB_ADMIN_PASS}
+    extra_hosts:
+      - 'localhost:172.17.0.1'
+      - "host.docker.internal:host-gateway"
