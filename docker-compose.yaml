@@ -1,0 +1,62 @@
+# nginx proxy address - http://172.17.0.1:59084
+
+name: mongodb
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  admin:
+    image: samueltallet/mongodb-php-gui:latest
+    container_name: mongodb-admin
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+    ports:
+      - '172.17.0.1:59084:5000'
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - 'localhost:172.17.0.1'
+      - 'mongodb:host-gateway'
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - mongodb
+
+  db:
+    image: mongo:latest
+    container_name: mongodb
+    hostname: mongodb
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ADMIN_NAME:-administrator}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_admin_password}
+    ports:
+      - 27017:27017
+    volumes:
+      - './rootfs/db/mongodb:/data/db'
+    healthcheck:
+      test: mongosh --eval 'db.runCommand("ping").ok' | grep -q '1'||exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - 'localhost:172.17.0.1'
+      - 'mongodb:host-gateway'
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - mongodb
+
+networks:
+  mongodb:
+    name: mongodb
+    external: false
