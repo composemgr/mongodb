@@ -43,7 +43,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - './rootfs/db/mongodb:/data/db'
+      - './rootfs/data/db/mongodb:/data/db'
     healthcheck:
       test: mongosh --eval 'db.runCommand("ping").ok' | grep -q '1'||exit 1
       interval: 10s
