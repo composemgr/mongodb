@@ -1,31 +1,37 @@
 ## 👋 Welcome to mongodb 🚀
 
-MongoDB - NoSQL document database
+Document-oriented NoSQL database
 
 ## 📋 Description
 
-MongoDB is a source-available cross-platform document-oriented database program. Classified as a NoSQL database, MongoDB uses JSON-like documents with optional schemas.
+Document-oriented NoSQL database
 
 ## 🚀 Services
 
-- **db**: MongoDB 7 (`mongo:7`)
+- **mongodb**: Main application
+
+### Infrastructure Components
+
+- **admin**: Mongodb-Php-Gui database
+- **db**: Mongo database
+
 
 ## 📦 Installation
 
-### Using curl
-```shell
-curl -q -LSsf "https://raw.githubusercontent.com/composemgr/mongodb/main/docker-compose.yaml" | docker compose -f - up -d
+### Option 1: Quick Install
+```bash
+curl -q -LSsf "https://raw.githubusercontent.com/composemgr/mongodb/main/docker-compose.yaml" -o compose.yml
 ```
 
-### Using git
-```shell
+### Option 2: Git Clone
+```bash
 git clone "https://github.com/composemgr/mongodb" ~/.local/srv/docker/mongodb
 cd ~/.local/srv/docker/mongodb
 docker compose up -d
 ```
 
-### Using composemgr
-```shell
+### Option 3: Using composemgr
+```bash
 composemgr install mongodb
 ```
 
@@ -35,85 +41,55 @@ composemgr install mongodb
 
 ```shell
 TZ=America/New_York
-MONGO_INITDB_ROOT_USERNAME=admin
-MONGO_INITDB_ROOT_PASSWORD=changeme_admin_password
-MONGO_INITDB_DATABASE=admin
 ```
+
+See `docker-compose.yaml` for complete list of configurable options.
 
 ## 🌐 Access
 
-- **MongoDB**: localhost:27017 (from Docker host)
-- **Connection String**: `mongodb://admin:password@localhost:27017/admin`
+- **Web Interface**: http://172.17.0.1:59084
 
 ## 📂 Volumes
 
-- `./rootfs/db/mongodb/mongodb` - Database files
+- `./rootfs/data/db/mongodb` - Data storage
 
 ## 🔐 Security
 
-- Enable authentication (enabled by default)
-- Create database-specific users
-- Use role-based access control
-- Enable TLS for production
-- Regular security updates
-
-### Create Database User
-```javascript
-use myapp
-db.createUser({
-  user: "myapp",
-  pwd: "secure_password",
-  roles: [{ role: "readWrite", db: "myapp" }]
-})
-```
+- Change all default passwords before deploying to production
+- Use strong secrets for all authentication tokens
+- Configure HTTPS using a reverse proxy (nginx, traefik, caddy)
+- Regularly update Docker images for security patches
+- Backup your data regularly
 
 ## 🔍 Logging
 
 ```shell
-docker compose logs -f db
+docker compose logs -f admin
 ```
 
 ## 🛠️ Management
 
-### Connect to Mongo shell
-```shell
-docker compose exec db mongosh -u admin -p password
-```
+```bash
+# Start services
+docker compose up -d
 
-### Common Commands
-```javascript
-// Show databases
-show dbs
+# Stop services
+docker compose down
 
-// Use database
-use myapp
+# Update to latest images
+docker compose pull && docker compose up -d
 
-// Show collections
-show collections
+# View logs
+docker compose logs -f
 
-// Find documents
-db.collection.find()
-```
-
-## 🔄 Backup & Restore
-
-### Backup
-```shell
-docker compose exec db mongodump -u admin -p password --out=/dump
-docker compose cp db:/dump ./backup-$(date +%Y%m%d)
-```
-
-### Restore
-```shell
-docker compose cp ./backup-YYYYMMDD db:/dump
-docker compose exec db mongorestore -u admin -p password /dump
+# Restart services
+docker compose restart
 ```
 
 ## 📋 Requirements
 
 - Docker Engine 20.10+
 - Docker Compose V2+
-- 1GB+ RAM recommended
 
 ## 🤝 Author
 
