@@ -17,6 +17,8 @@ services:
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: mongodb-admin
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '172.17.0.1:59084:5000'
     depends_on:
@@ -28,6 +30,24 @@ services:
       - 'host.docker.internal:host-gateway'
     networks:
       - mongodb
+      - proxy
+      - cloudflare
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://mongodb-admin:5000'
+      - 'cloudflare.hostname=mongodb.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.mongodb-admin.entrypoints=http'
+      - 'traefik.http.routers.mongodb-admin-secure.tls=true'
+      - 'traefik.http.routers.mongodb-admin.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.mongodb-admin-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.mongodb-admin.middlewares=mongodb-admin-https-redirect'
+      - 'traefik.http.routers.mongodb-admin-secure.entrypoints=https'
+      - 'traefik.http.routers.mongodb-admin-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.mongodb-admin-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.mongodb-admin-secure.service=mongodb-admin'
+      - 'traefik.http.services.mongodb-admin.loadbalancer.server.port=5000'
 
   db:
     image: mongo:latest
@@ -38,6 +58,7 @@ services:
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: mongodb
       MONGO_INITDB_ROOT_USERNAME: ${DB_ADMIN_NAME:-administrator}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_admin_password}
     ports:
@@ -60,3 +81,7 @@ networks:
   mongodb:
     name: mongodb
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
