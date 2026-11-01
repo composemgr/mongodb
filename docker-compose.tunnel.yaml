@@ -1,0 +1,39 @@
+# nginx proxy address - no HTTP interface, MongoDB is not published behind a tunnel
+
+name: mongodb
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  db:
+    image: mongo:latest
+    container_name: mongodb
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: mongodb
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: mongodb
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ADMIN_NAME:-administrator}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ADMIN_PASS:-replace-with-a-random-password}
+    volumes:
+      - './volumes/db/mongodb/mongodb:/data/db:z'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping').ok", '--quiet']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mongodb
+
+networks:
+  mongodb:
+    name: mongodb
+    external: false
+  cloudflare:
+    external: true
